@@ -258,20 +258,14 @@ app.get("/sse", async (req, res) => {
   console.log("Accept:", req.headers['accept']);
   
   try {
-    // Set proper SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+    console.log("Creating SSE transport...");
     
-    console.log("SSE headers set, creating transport...");
-    
+    // Create transport - it will handle both SSE and message responses
     const transport = new SSEServerTransport("/messages", res);
     console.log("Transport created, connecting to server...");
     
     await server.connect(transport);
-    console.log("Server connected successfully!");
+    console.log("Server connected successfully! MCP handshake initiated...");
     
     // Keep connection alive
     req.on("close", () => {
@@ -281,18 +275,14 @@ app.get("/sse", async (req, res) => {
   } catch (error) {
     console.error("SSE connection error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    res.status(500).json({ error: "SSE connection failed", details: errorMessage });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "SSE connection failed", details: errorMessage });
+    }
   }
 });
 
-// Message endpoint for client requests
-app.post("/messages", async (req, res) => {
-  console.log("=== RECEIVED MESSAGE ===");
-  console.log("Body:", JSON.stringify(req.body, null, 2));
-  
-  // SSE transport handles this automatically
-  res.status(200).send();
-});
+// Note: /messages endpoint is handled by SSEServerTransport automatically
+// We don't need to define it here - it conflicts with the transport
 
 // Start HTTP server
 app.listen(PORT, () => {
