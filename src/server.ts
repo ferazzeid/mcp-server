@@ -287,6 +287,9 @@ app.get("/sse", async (req, res) => {
 
 // Message endpoint for client requests
 app.post("/messages", async (req, res) => {
+  console.log("=== RECEIVED MESSAGE ===");
+  console.log("Body:", JSON.stringify(req.body, null, 2));
+  
   // SSE transport handles this automatically
   res.status(200).send();
 });
