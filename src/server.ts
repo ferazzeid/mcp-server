@@ -104,10 +104,38 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   throw new Error("Resource not found");
 });
 
-// Register example tool
+// Register MCP standard tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
+      {
+        name: "search",
+        description: "Search for greeting messages and content",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Search query for greeting content",
+            },
+          },
+          required: ["query"],
+        },
+      },
+      {
+        name: "fetch",
+        description: "Fetch a specific greeting message by ID",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "Unique identifier for the greeting message",
+            },
+          },
+          required: ["id"],
+        },
+      },
       {
         name: "show_greeting",
         description: "Display a greeting message in a custom widget",
@@ -132,6 +160,58 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "search") {
+    const query = (request.params.arguments as any)?.query || "";
+    
+    // Mock search results - in a real app, this would search your data source
+    const results = [
+      {
+        id: "greeting-1",
+        title: `Greeting for ${query}`,
+        url: "https://mcp.fastnow.app/greeting/1"
+      },
+      {
+        id: "greeting-2", 
+        title: `Welcome message for ${query}`,
+        url: "https://mcp.fastnow.app/greeting/2"
+      }
+    ];
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({ results }),
+        },
+      ],
+    };
+  }
+
+  if (request.params.name === "fetch") {
+    const id = (request.params.arguments as any)?.id || "";
+    
+    // Mock fetch result - in a real app, this would fetch from your data source
+    const document = {
+      id: id,
+      title: `Greeting Message ${id}`,
+      text: `Hello! This is a greeting message with ID: ${id}. Welcome to our MCP server!`,
+      url: `https://mcp.fastnow.app/greeting/${id}`,
+      metadata: {
+        source: "mcp_server",
+        created_at: new Date().toISOString()
+      }
+    };
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(document),
+        },
+      ],
+    };
+  }
+
   if (request.params.name === "show_greeting") {
     const name = (request.params.arguments as any)?.name || "World";
     return {
@@ -146,6 +226,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       },
     };
   }
+  
   throw new Error("Tool not found");
 });
 
