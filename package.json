@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "test": "echo \"No tests yet\"",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "deploy": "bash deploy-to-coolify.sh"
   },
   "keywords": [
     "mcp",

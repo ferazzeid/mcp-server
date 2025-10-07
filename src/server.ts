@@ -149,6 +149,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error("Tool not found");
 });
 
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    service: "MCP Server for ChatGPT Apps",
+    status: "running",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      sse: "/sse",
+      messages: "/messages"
+    },
+    documentation: "https://github.com/ferazzeid/mcp-server"
+  });
+});
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "mcp-server" });
