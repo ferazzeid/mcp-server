@@ -281,8 +281,14 @@ app.get("/sse", async (req, res) => {
   }
 });
 
-// Note: /messages endpoint is handled by SSEServerTransport automatically
-// We don't need to define it here - it conflicts with the transport
+// POST endpoint for MCP messages
+// This receives messages from the client and the transport handles them
+app.post("/messages", (req, res) => {
+  console.log("=== RECEIVED POST TO /messages ===");
+  console.log("Body:", JSON.stringify(req.body, null, 2));
+  // The transport will handle the actual response through the SSE connection
+  res.status(202).send();
+});
 
 // Start HTTP server
 app.listen(PORT, () => {
