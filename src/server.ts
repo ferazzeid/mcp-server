@@ -252,15 +252,36 @@ app.get("/health", (req, res) => {
 
 // SSE endpoint for MCP
 app.get("/sse", async (req, res) => {
-  console.log("New SSE connection established");
+  console.log("=== NEW SSE CONNECTION ===");
+  console.log("Headers:", req.headers);
+  console.log("User-Agent:", req.headers['user-agent']);
+  console.log("Accept:", req.headers['accept']);
   
-  const transport = new SSEServerTransport("/messages", res);
-  await server.connect(transport);
-  
-  // Keep connection alive
-  req.on("close", () => {
-    console.log("SSE connection closed");
-  });
+  try {
+    // Set proper SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+    
+    console.log("SSE headers set, creating transport...");
+    
+    const transport = new SSEServerTransport("/messages", res);
+    console.log("Transport created, connecting to server...");
+    
+    await server.connect(transport);
+    console.log("Server connected successfully!");
+    
+    // Keep connection alive
+    req.on("close", () => {
+      console.log("=== SSE CONNECTION CLOSED ===");
+    });
+    
+  } catch (error) {
+    console.error("SSE connection error:", error);
+    res.status(500).json({ error: "SSE connection failed", details: error.message });
+  }
 });
 
 // Message endpoint for client requests
