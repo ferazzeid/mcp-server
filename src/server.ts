@@ -280,7 +280,8 @@ app.get("/sse", async (req, res) => {
     
   } catch (error) {
     console.error("SSE connection error:", error);
-    res.status(500).json({ error: "SSE connection failed", details: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    res.status(500).json({ error: "SSE connection failed", details: errorMessage });
   }
 });
 
