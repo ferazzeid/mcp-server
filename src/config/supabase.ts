@@ -21,16 +21,27 @@ export function createUserClient(userToken: string): SupabaseClient {
   });
 }
 
-// Validate token and get user ID
+// Validate OAuth token via database lookup (matches Lovable's oauth-middleware)
 export async function validateTokenAndGetUserId(token: string): Promise<string> {
-  const userClient = createUserClient(token);
-  const { data: { user }, error } = await userClient.auth.getUser();
+  // Look up the token in the oauth_access_tokens table
+  const { data, error } = await supabaseAdmin
+    .from('oauth_access_tokens')
+    .select('user_id, expires_at')
+    .eq('access_token', token)
+    .eq('revoked', false)
+    .single();
   
-  if (error || !user) {
-    throw new Error('Invalid authentication token');
+  if (error || !data) {
+    console.error('Token lookup error:', error);
+    throw new Error('Invalid or expired access token');
   }
   
-  return user.id;
+  // Check if token is expired
+  if (new Date(data.expires_at) < new Date()) {
+    throw new Error('Access token expired');
+  }
+  
+  return data.user_id;
 }
 
 
