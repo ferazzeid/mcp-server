@@ -750,8 +750,11 @@ app.post("/mcp", express.json(), async (req, res) => {
         if (["start_fast", "end_fast", "log_food", "log_weight", "start_walk", "end_walk"].includes(toolName)) {
           // Extract token from Authorization header (ChatGPT sends it here after OAuth)
           const authHeader = req.headers.authorization;
+          console.log("🔍 Authorization header:", authHeader);
+          console.log("🔍 All headers:", JSON.stringify(req.headers, null, 2));
           const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
-          if (!userToken) throw new Error("Authentication required");
+          console.log("🔍 Extracted token:", userToken ? `${userToken.substring(0, 50)}...` : 'NULL');
+          if (!userToken) throw new Error("Authentication required - no Bearer token in Authorization header");
           const userId = await validateTokenAndGetUserId(userToken);
           
           switch (toolName) {
