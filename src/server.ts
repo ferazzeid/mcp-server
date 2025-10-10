@@ -504,20 +504,26 @@ app.get("/sse", async (req, res) => {
   try {
     console.log("Creating SSE transport...");
     
-    // Create transport - it will handle both SSE and message responses
-    const transport = new SSEServerTransport("/messages", res);
-    console.log("Transport created, connecting to server...");
+    // Create transport with full URL path
+    const baseUrl = `https://${req.headers.host || 'mcp.fastnow.app'}`;
+    const transport = new SSEServerTransport(`${baseUrl}/messages`, res);
+    console.log(`Transport created with endpoint: ${baseUrl}/messages`);
     
+    console.log("Connecting server to transport...");
     await server.connect(transport);
-    console.log("Server connected successfully! MCP handshake initiated...");
+    console.log("✅ Server connected successfully! Waiting for initialize message...");
     
     // Keep connection alive
     req.on("close", () => {
       console.log("=== SSE CONNECTION CLOSED ===");
     });
     
+    res.on("finish", () => {
+      console.log("=== SSE RESPONSE FINISHED ===");
+    });
+    
   } catch (error) {
-    console.error("SSE connection error:", error);
+    console.error("❌ SSE connection error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (!res.headersSent) {
       res.status(500).json({ error: "SSE connection failed", details: errorMessage });
