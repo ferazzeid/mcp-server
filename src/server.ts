@@ -26,10 +26,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Serve static files for .well-known manifest
-app.use(express.static('public'));
-
-// MCP Discovery endpoint
+// MCP Discovery endpoint (must be BEFORE static middleware!)
 app.get('/.well-known/mcp.json', (req, res) => {
   res.json({
     "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",

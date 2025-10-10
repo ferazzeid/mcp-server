@@ -2,7 +2,7 @@
   "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
   "name": "FastNow MCP Server",
   "description": "Track your fasting, nutrition, and weight with AI assistance through FastNow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "FastNow",
     "url": "https://fastnow.app"
