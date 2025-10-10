@@ -303,7 +303,9 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-profile/weight/current",
     method: "GET",
-    scopes: ["read:profile"]
+    scopes: ["read:profile"],
+    component: "ui://widget/weight-progress.html",
+    readOnlyHint: true
   },
   {
     name: "update_weight",
@@ -325,7 +327,9 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-profile/weight/target",
     method: "GET",
-    scopes: ["read:profile"]
+    scopes: ["read:profile"],
+    component: "ui://widget/weight-progress.html",
+    readOnlyHint: true
   },
   {
     name: "set_target_weight",

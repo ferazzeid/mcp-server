@@ -3,7 +3,7 @@
  * Maps tools to their UI components hosted on Cloudflare Pages
  */
 
-const COMPONENTS_CDN = "https://5663f26e.fastnow-components.pages.dev";
+const COMPONENTS_CDN = "https://2533d87e.fastnow-components.pages.dev";
 
 export interface ComponentConfig {
   uri: string;

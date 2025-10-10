@@ -62,10 +62,24 @@ const FastingProgress: React.FC = () => {
     }
   };
 
+  // Determine fast type
+  const isExtendedFast = data.goal_hours >= 24;
+  const currentDay = Math.floor(elapsedHours / 24) + 1;
+  const totalDays = Math.ceil(data.goal_hours / 24);
+
+  // Extended fast milestones
+  const milestones = [
+    { hours: 16, label: 'Fat burning begins', icon: '🔥' },
+    { hours: 24, label: 'Autophagy begins', icon: '♻️' },
+    { hours: 36, label: 'Deep ketosis', icon: '⚡' },
+    { hours: 48, label: 'Growth hormone peak', icon: '💪' },
+    { hours: 72, label: 'Maximum benefits', icon: '🏆' }
+  ];
+
   return (
     <div className="fastnow-widget fasting-progress">
       <div className="widget-header">
-        <h2>🕐 Your Fast</h2>
+        <h2>{isExtendedFast ? '💪 Extended Fast' : '🟢 Fasting Now'}</h2>
         <span className={`status-badge ${data.status}`}>{data.status}</span>
       </div>
 
@@ -115,6 +129,15 @@ const FastingProgress: React.FC = () => {
         </div>
       </div>
 
+      {isExtendedFast && (
+        <div className="extended-fast-header">
+          <h3>💪 Extended Fast</h3>
+          <div className="day-counter">
+            Day {currentDay} of {totalDays}
+          </div>
+        </div>
+      )}
+
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-label">Started</div>
@@ -123,9 +146,9 @@ const FastingProgress: React.FC = () => {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Goal Time</div>
+          <div className="stat-label">{isExtendedFast ? 'Elapsed' : 'Goal Time'}</div>
           <div className="stat-value">
-            {new Date(startTime.getTime() + goalSeconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {isExtendedFast ? `${elapsedHours}h ${elapsedMinutes}m` : new Date(startTime.getTime() + goalSeconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
         <div className="stat-card">
@@ -135,6 +158,28 @@ const FastingProgress: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {isExtendedFast && (
+        <div className="milestones">
+          <h4>Milestones</h4>
+          <div className="milestone-list">
+            {milestones.map((milestone) => {
+              const reached = elapsedHours >= milestone.hours;
+              return (
+                <div key={milestone.hours} className={`milestone ${reached ? 'reached' : ''}`}>
+                  <div className="milestone-icon">{reached ? '✅' : '🔲'}</div>
+                  <div className="milestone-info">
+                    <div className="milestone-time">{milestone.hours}hr</div>
+                    <div className="milestone-label">
+                      {milestone.icon} {milestone.label}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="action-buttons">
         {data.status === 'active' && (
@@ -160,9 +205,15 @@ const FastingProgress: React.FC = () => {
       </div>
 
       <div className="motivational-message">
+        {!isExtendedFast && progress < 100 && progress >= 90 && (
+          <div className="eating-window-alert">
+            ⏰ Eating window opens in {Math.floor((goalSeconds - elapsed) / 60)}m
+          </div>
+        )}
         {progress < 50 && "💪 You're doing great! Keep going!"}
         {progress >= 50 && progress < 90 && "🔥 Amazing! You're past halfway!"}
-        {progress >= 90 && progress < 100 && "🎉 Almost there! Final stretch!"}
+        {progress >= 90 && progress < 100 && !isExtendedFast && "🎉 Almost there! Final stretch!"}
+        {isExtendedFast && progress < 100 && `🔋 ${Math.ceil((data.goal_hours - elapsedHours) / 24)} days to go. Stay strong!`}
         {progress >= 100 && "🏆 Goal reached! Incredible work!"}
       </div>
     </div>

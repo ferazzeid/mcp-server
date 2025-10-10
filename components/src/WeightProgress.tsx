@@ -23,11 +23,16 @@ interface WeightProgressData {
 
 const WeightProgress: React.FC = () => {
   const [data, setData] = useState<WeightProgressData | null>(null);
+  const [showScenarioPlanner, setShowScenarioPlanner] = useState(false);
+  const [scenarioDeficit, setScenarioDeficit] = useState(500);
+  const [scenarioTarget, setScenarioTarget] = useState(0);
+  const [scenarioTimeline, setScenarioTimeline] = useState(90);
 
   useEffect(() => {
     const toolOutput = (window as any).openai?.toolOutput;
     if (toolOutput) {
       setData(toolOutput);
+      setScenarioTarget(toolOutput.target_weight);
     }
   }, []);
 
@@ -35,11 +40,39 @@ const WeightProgress: React.FC = () => {
     return <div className="loading">Loading weight progress...</div>;
   }
 
-  // Prepare chart data
+  // Calculate 90-day timeline
+  const today = new Date();
+  const startDate = data.history.length > 0 
+    ? new Date(data.history[0].recorded_at)
+    : new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+  
+  const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  const daysRemaining = Math.max(0, 90 - daysSinceStart);
+
+  // Prepare chart data with 90-day projection
   const chartData = data.history.map(entry => ({
     date: new Date(entry.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    weight: entry.weight_kg
+    weight: entry.weight_kg,
+    target: null as number | null
   }));
+
+  // Add target line
+  if (chartData.length > 0) {
+    chartData.push({
+      date: new Date(startDate.getTime() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weight: null as any,
+      target: data.target_weight
+    });
+  }
+
+  // Scenario calculations
+  const deficitPerKg = 7700; // calories per kg of fat
+  const daysToGoal = scenarioDeficit > 0 
+    ? Math.ceil(((data.current_weight - scenarioTarget) * deficitPerKg) / scenarioDeficit)
+    : 999;
+  const projectedDate = new Date(today.getTime() + daysToGoal * 24 * 60 * 60 * 1000);
+  const ratePerDay = scenarioDeficit > 0 ? (scenarioDeficit / deficitPerKg).toFixed(2) : '0';
+  const dailyCalories = 2000 - scenarioDeficit; // Assume 2000 maintenance
 
   const getBMICategory = (bmi: number) => {
     if (bmi < 18.5) return { category: 'Underweight', color: '#3b82f6' };
@@ -53,7 +86,10 @@ const WeightProgress: React.FC = () => {
   return (
     <div className="fastnow-widget weight-progress">
       <div className="widget-header">
-        <h2>⚖️ Weight Progress</h2>
+        <h2>⚖️ Weight Progress (90 Days)</h2>
+        <div className="timeline-badge">
+          Day {daysSinceStart} {daysRemaining > 0 && `• ${daysRemaining} days left`}
+        </div>
       </div>
 
       {/* Progress Overview */}
@@ -148,6 +184,93 @@ const WeightProgress: React.FC = () => {
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* Scenario Planner */}
+      <div className="scenario-planner">
+        <button 
+          className="scenario-toggle"
+          onClick={() => setShowScenarioPlanner(!showScenarioPlanner)}
+        >
+          ⚙️ Scenario Planner {showScenarioPlanner ? '▼' : '▶'}
+        </button>
+        
+        {showScenarioPlanner && (
+          <div className="scenario-controls">
+            <div className="control-group">
+              <label>
+                Target Weight: {scenarioTarget} {data.units}
+                <input 
+                  type="range" 
+                  min={data.current_weight - 30} 
+                  max={data.current_weight}
+                  value={scenarioTarget}
+                  onChange={(e) => setScenarioTarget(Number(e.target.value))}
+                  className="slider"
+                />
+              </label>
+            </div>
+
+            <div className="control-group">
+              <label>
+                Daily Deficit: {scenarioDeficit} cal 
+                <input 
+                  type="range" 
+                  min={250} 
+                  max={1000}
+                  step={50}
+                  value={scenarioDeficit}
+                  onChange={(e) => setScenarioDeficit(Number(e.target.value))}
+                  className="slider"
+                />
+              </label>
+            </div>
+
+            <div className="control-group">
+              <label>
+                Timeline: {scenarioTimeline} days
+                <input 
+                  type="range" 
+                  min={30} 
+                  max={180}
+                  step={15}
+                  value={scenarioTimeline}
+                  onChange={(e) => setScenarioTimeline(Number(e.target.value))}
+                  className="slider"
+                />
+              </label>
+            </div>
+
+            <div className="scenario-results">
+              <h4>Predicted Results:</h4>
+              <div className="result-row">
+                <span className="result-label">📅 Goal Date:</span>
+                <span className="result-value">{projectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </div>
+              <div className="result-row">
+                <span className="result-label">⚡ Rate:</span>
+                <span className="result-value">{ratePerDay} kg/day</span>
+              </div>
+              <div className="result-row">
+                <span className="result-label">🍽️ Daily Intake:</span>
+                <span className="result-value">{dailyCalories} cal</span>
+              </div>
+              <div className="result-row">
+                <span className="result-label">⏱️ Days to Goal:</span>
+                <span className="result-value">{daysToGoal} days</span>
+              </div>
+            </div>
+
+            <button 
+              className="btn btn-primary"
+              onClick={() => {
+                (window as any).openai?.callTool('set_target_weight', { target_weight: scenarioTarget });
+              }}
+            >
+              ✅ Apply Scenario
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Action Buttons */}
       <div className="action-buttons">

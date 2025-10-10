@@ -27,6 +27,7 @@ interface FoodLogData {
 
 const FoodLog: React.FC = () => {
   const [data, setData] = useState<FoodLogData | null>(null);
+  const [showAllMacros, setShowAllMacros] = useState(false);
 
   useEffect(() => {
     const toolOutput = (window as any).openai?.toolOutput;
@@ -42,6 +43,9 @@ const FoodLog: React.FC = () => {
   const calorieProgress = data.calorie_goal 
     ? (data.totals.calories / data.calorie_goal) * 100 
     : 0;
+  
+  // Check if this is a single-item add (for condensed view)
+  const isSingleAdd = data.entries.length === 1 && !data.calorie_goal;
 
   const handleDeleteFood = async (foodId: string) => {
     if ((window as any).openai?.callTool) {
@@ -92,32 +96,39 @@ const FoodLog: React.FC = () => {
         </div>
       )}
 
-      {/* Macros Summary */}
-      <div className="macros-grid">
-        <div className="macro-card carbs">
-          <div className="macro-icon">🌾</div>
-          <div className="macro-info">
-            <div className="macro-value">{data.totals.carbs}g</div>
-            <div className="macro-label">Carbs</div>
-            <div className="macro-percent">{macroPercent.carbs.toFixed(0)}%</div>
+      {/* Macros Summary - Calories + Carbs (default), Protein/Fat (on request) */}
+      <div className="macros-summary">
+        <div className="primary-macros">
+          <div className="macro-item calories">
+            <span className="macro-value">{data.totals.calories}</span>
+            <span className="macro-unit">cal</span>
           </div>
-        </div>
-        <div className="macro-card protein">
-          <div className="macro-icon">🥩</div>
-          <div className="macro-info">
-            <div className="macro-value">{data.totals.protein}g</div>
-            <div className="macro-label">Protein</div>
-            <div className="macro-percent">{macroPercent.protein.toFixed(0)}%</div>
+          <div className="macro-divider">|</div>
+          <div className="macro-item carbs">
+            <span className="macro-value">{data.totals.carbs}g</span>
+            <span className="macro-label">carbs</span>
           </div>
+          {showAllMacros && (
+            <>
+              <div className="macro-divider">|</div>
+              <div className="macro-item protein">
+                <span className="macro-value">{data.totals.protein}g</span>
+                <span className="macro-label">protein</span>
+              </div>
+              <div className="macro-divider">|</div>
+              <div className="macro-item fat">
+                <span className="macro-value">{data.totals.fat}g</span>
+                <span className="macro-label">fat</span>
+              </div>
+            </>
+          )}
         </div>
-        <div className="macro-card fat">
-          <div className="macro-icon">🥑</div>
-          <div className="macro-info">
-            <div className="macro-value">{data.totals.fat}g</div>
-            <div className="macro-label">Fat</div>
-            <div className="macro-percent">{macroPercent.fat.toFixed(0)}%</div>
-          </div>
-        </div>
+        <button 
+          className="btn-link" 
+          onClick={() => setShowAllMacros(!showAllMacros)}
+        >
+          {showAllMacros ? '− Less' : '+ Show protein & fat'}
+        </button>
       </div>
 
       {/* Food Entries List */}
@@ -145,7 +156,7 @@ const FoodLog: React.FC = () => {
                 <div className="entry-details">
                   <div className="entry-name">{entry.name}</div>
                   <div className="entry-macros">
-                    {entry.calories} cal • {entry.carbs}g carbs • {entry.protein}g protein • {entry.fat}g fat
+                    {entry.calories} cal, {entry.carbs}g carbs
                   </div>
                 </div>
                 <button 
