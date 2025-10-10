@@ -497,47 +497,46 @@ app.get("/health", (req, res) => {
 // SSE endpoint for MCP
 app.get("/sse", async (req, res) => {
   console.log("=== NEW SSE CONNECTION ===");
-  console.log("Headers:", req.headers);
-  console.log("User-Agent:", req.headers['user-agent']);
-  console.log("Accept:", req.headers['accept']);
+  console.log("Headers:", JSON.stringify(req.headers, null, 2));
   
   try {
+    // Set proper SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no' // Disable Nginx buffering
+    });
+    
+    // Send initial comment to establish connection
+    res.write(': mcp-server\n\n');
+    
     console.log("Creating SSE transport...");
+    const transport = new SSEServerTransport("/messages", res);
+    console.log("Transport created, connecting server...");
     
-    // Create transport with full URL path
-    const baseUrl = `https://${req.headers.host || 'mcp.fastnow.app'}`;
-    const transport = new SSEServerTransport(`${baseUrl}/messages`, res);
-    console.log(`Transport created with endpoint: ${baseUrl}/messages`);
-    
-    console.log("Connecting server to transport...");
     await server.connect(transport);
-    console.log("✅ Server connected successfully! Waiting for initialize message...");
+    console.log("✅ Server connected! MCP session established.");
     
     // Keep connection alive
     req.on("close", () => {
       console.log("=== SSE CONNECTION CLOSED ===");
     });
     
-    res.on("finish", () => {
-      console.log("=== SSE RESPONSE FINISHED ===");
-    });
-    
   } catch (error) {
-    console.error("❌ SSE connection error:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ SSE error:", error);
     if (!res.headersSent) {
-      res.status(500).json({ error: "SSE connection failed", details: errorMessage });
+      res.status(500).json({ error: String(error) });
     }
   }
 });
 
-// POST endpoint for MCP messages
-// This receives messages from the client and the transport handles them
-app.post("/messages", (req, res) => {
+// POST endpoint for MCP messages - transport will handle this
+app.post("/messages", express.json(), async (req, res) => {
   console.log("=== RECEIVED POST TO /messages ===");
   console.log("Body:", JSON.stringify(req.body, null, 2));
-  // The transport will handle the actual response through the SSE connection
-  res.status(202).send();
+  // Transport handles the response via SSE
+  res.status(202).end();
 });
 
 // Start HTTP server
