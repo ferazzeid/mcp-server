@@ -293,9 +293,8 @@ app.post("/mcp", express.json(), async (req, res) => {
                   "openai/scopes": tool.scopes,
                   "openai/outputTemplate": tool.component,
                   "openai/widgetCSP": {
-                    "connect-src": ["https://2533d87e.fastnow-components.pages.dev"],
-                    "script-src": ["https://2533d87e.fastnow-components.pages.dev"],
-                    "style-src": ["https://2533d87e.fastnow-components.pages.dev"]
+                    connect_domains: ["https://2533d87e.fastnow-components.pages.dev"],
+                    resource_domains: ["https://2533d87e.fastnow-components.pages.dev"]
                   }
                 };
               }
