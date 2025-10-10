@@ -32,7 +32,8 @@ export function createUserClient(userToken: string): SupabaseClient {
 }
 
 // Validate OAuth token via database lookup (matches Lovable's oauth-middleware)
-export async function validateTokenAndGetUserId(token: string): Promise<string> {
+// Returns both user_id and the validated token for proxying
+export async function validateOAuthToken(token: string): Promise<{ userId: string; token: string }> {
   console.log('🔍 Looking up token in oauth_apps table');
   
   // Look up the token in the oauth_apps table
@@ -51,7 +52,19 @@ export async function validateTokenAndGetUserId(token: string): Promise<string> 
   }
   
   console.log('✅ Token valid for user:', data.user_id, 'scopes:', data.scopes);
-  return data.user_id;
+  
+  // Return both user ID and the original OAuth token
+  // The Edge Functions will validate this token themselves using oauth-middleware
+  return {
+    userId: data.user_id,
+    token: token // Pass the OAuth UUID token as-is
+  };
+}
+
+// Legacy function name for backwards compatibility
+export async function validateTokenAndGetUserId(token: string): Promise<string> {
+  const { userId } = await validateOAuthToken(token);
+  return userId;
 }
 
 

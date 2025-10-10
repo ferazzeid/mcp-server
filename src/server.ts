@@ -185,11 +185,12 @@ async function proxyToolCallToSupabase(
     let url = `${SUPABASE_FUNCTIONS_BASE_URL}${endpoint}`;
     
     // Build request options
+    // Use X-OAuth-Token header to bypass Supabase's platform-level JWT validation
     const options: RequestInit = {
       method: toolConfig.method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
+        'X-OAuth-Token': authToken  // Custom header for OAuth tokens (not JWTs)
       }
     };
 

@@ -1,0 +1,43 @@
+# Test OAuth Read Access
+# Replace YOUR_TOKEN_HERE with your actual OAuth token from oauth_apps table
+
+### 1. Test get_current_fast via MCP
+POST https://mcp.fastnow.app/mcp
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_current_fast",
+    "arguments": {}
+  }
+}
+
+### 2. Test get_weight_progress via MCP
+POST https://mcp.fastnow.app/mcp
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "get_weight_progress",
+    "arguments": {}
+  }
+}
+
+### 3. Test directly to Supabase Edge Function
+GET https://texnkijwcygodtywgedm.supabase.co/functions/v1/gpt-profile/weight/progress
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### 4. Check OAuth token in database
+# Run this in Supabase SQL Editor:
+# SELECT user_id, scopes, expires_at, revoked_at, app_name 
+# FROM oauth_apps 
+# WHERE access_token = 'YOUR_TOKEN_HERE';
+
