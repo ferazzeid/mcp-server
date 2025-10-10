@@ -408,3 +408,4 @@ Coolify → MCP App → Deployments tab
 
 **Questions?** Check Coolify logs or test with the Responses API!
 
+

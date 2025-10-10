@@ -33,3 +33,4 @@ export async function validateTokenAndGetUserId(token: string): Promise<string> 
   return user.id;
 }
 
+

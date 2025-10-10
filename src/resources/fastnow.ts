@@ -66,9 +66,9 @@ export async function getTodaysFood(userId: string, userToken: string) {
   }
   
   const entries = data || [];
-  const consumed = entries.filter(e => e.consumed);
+  const consumed = entries.filter((e: any) => e.consumed);
   
-  const totals = consumed.reduce((acc, entry) => ({
+  const totals = consumed.reduce((acc: any, entry: any) => ({
     calories: acc.calories + (Number(entry.calories) || 0),
     carbs: acc.carbs + (Number(entry.carbs) || 0),
     protein: acc.protein + (Number(entry.protein) || 0),
@@ -77,7 +77,7 @@ export async function getTodaysFood(userId: string, userToken: string) {
   
   return {
     date: today.toISOString().split('T')[0],
-    entries: entries.map(e => ({
+    entries: entries.map((e: any) => ({
       id: e.id,
       name: e.name,
       calories: Number(e.calories),
@@ -130,7 +130,7 @@ export async function getWeightHistory(userId: string, userToken: string, limit:
   const percentChange = ((totalChange / oldestWeight) * 100).toFixed(1);
   
   return {
-    entries: entries.map(e => ({
+    entries: entries.map((e: any) => ({
       id: e.id,
       weight_kg: Number(e.weight_kg),
       recorded_at: e.recorded_at
@@ -217,8 +217,8 @@ export async function getDailySummary(userId: string, userToken: string) {
   ]);
   
   // Calculate food totals
-  const consumedFood = (food.data || []).filter(e => e.consumed);
-  const foodTotals = consumedFood.reduce((acc, entry) => ({
+  const consumedFood = (food.data || []).filter((e: any) => e.consumed);
+  const foodTotals = consumedFood.reduce((acc: any, entry: any) => ({
     calories: acc.calories + (Number(entry.calories) || 0),
     carbs: acc.carbs + (Number(entry.carbs) || 0),
     protein: acc.protein + (Number(entry.protein) || 0),
@@ -226,8 +226,8 @@ export async function getDailySummary(userId: string, userToken: string) {
   }), { calories: 0, carbs: 0, protein: 0, fat: 0 });
   
   // Calculate walking totals
-  const completedWalks = (walking.data || []).filter(w => w.status === 'completed');
-  const walkingTotals = completedWalks.reduce((acc, walk) => ({
+  const completedWalks = (walking.data || []).filter((w: any) => w.status === 'completed');
+  const walkingTotals = completedWalks.reduce((acc: any, walk: any) => ({
     distance: acc.distance + (Number(walk.distance) || 0),
     calories_burned: acc.calories_burned + (Number(walk.calories_burned) || 0)
   }), { distance: 0, calories_burned: 0 });
@@ -265,4 +265,5 @@ export async function getDailySummary(userId: string, userToken: string) {
     } : null
   };
 }
+
 
