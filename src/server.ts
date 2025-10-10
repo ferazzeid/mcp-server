@@ -500,16 +500,8 @@ app.get("/sse", async (req, res) => {
   console.log("Headers:", JSON.stringify(req.headers, null, 2));
   
   try {
-    // Set proper SSE headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no' // Disable Nginx buffering
-    });
-    
-    // Send initial comment to establish connection
-    res.write(': mcp-server\n\n');
+    // Add X-Accel-Buffering before transport takes over
+    res.setHeader('X-Accel-Buffering', 'no');
     
     console.log("Creating SSE transport...");
     const transport = new SSEServerTransport("/messages", res);
