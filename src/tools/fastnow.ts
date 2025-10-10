@@ -1,8 +1,9 @@
-import { createUserClient } from '../config/supabase';
+import { supabaseAdmin } from '../config/supabase';
 
 // Tool: Start Fasting Session
 export async function startFast(userId: string, userToken: string, goalHours: number) {
-  const supabase = createUserClient(userToken);
+  // Use admin client since we've already validated the OAuth token
+  const supabase = supabaseAdmin;
   
   // Check for existing active fast
   const { data: existingFast } = await supabase
@@ -50,7 +51,7 @@ export async function startFast(userId: string, userToken: string, goalHours: nu
 
 // Tool: End Fasting Session
 export async function endFast(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   // Find active fast
   const { data: activeFast, error: findError } = await supabase
@@ -125,7 +126,7 @@ export async function logFood(
     serving_size?: number;
   }
 ) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const now = new Date().toISOString();
   
@@ -169,7 +170,7 @@ export async function logWeight(
   userToken: string,
   weightKg: number
 ) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const now = new Date().toISOString();
   
@@ -206,7 +207,7 @@ export async function logWeight(
 
 // Tool: Start Walking Session
 export async function startWalk(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   // Check for existing active walk
   const { data: existingWalk } = await supabase
@@ -258,7 +259,7 @@ export async function endWalk(
     calories_burned?: number;
   }
 ) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   // Find active walk
   const { data: activeWalk, error: findError } = await supabase

@@ -1,8 +1,8 @@
-import { createUserClient } from '../config/supabase';
+import { supabaseAdmin } from '../config/supabase';
 
 // Resource: Current Fasting Session
 export async function getCurrentFast(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const { data, error } = await supabase
     .from('fasting_sessions')
@@ -46,7 +46,7 @@ export async function getCurrentFast(userId: string, userToken: string) {
 
 // Resource: Today's Food Entries
 export async function getTodaysFood(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -101,7 +101,7 @@ export async function getTodaysFood(userId: string, userToken: string) {
 
 // Resource: Weight History
 export async function getWeightHistory(userId: string, userToken: string, limit: number = 30) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const { data, error } = await supabase
     .from('weight_entries')
@@ -145,7 +145,7 @@ export async function getWeightHistory(userId: string, userToken: string, limit:
 
 // Resource: User Profile
 export async function getUserProfile(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const { data, error } = await supabase
     .from('profiles')
@@ -172,7 +172,7 @@ export async function getUserProfile(userId: string, userToken: string) {
 
 // Resource: Daily Summary
 export async function getDailySummary(userId: string, userToken: string) {
-  const supabase = createUserClient(userToken);
+  const supabase = supabaseAdmin;
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
