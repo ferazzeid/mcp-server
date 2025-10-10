@@ -52,8 +52,11 @@ app.get('/.well-known/mcp.json', (req, res) => {
       }
     },
     "authentication": {
-      "type": "bearer",
-      "description": "Requires user's Supabase JWT token for accessing FastNow data"
+      "type": "oauth2",
+      "authorization_url": "https://go.fastnow.app/oauth/authorize",
+      "token_url": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      "client_id": "chatgpt-fastnow",
+      "scopes": "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
     },
     "homepage": "https://fastnow.app",
     "documentation": "https://mcp.fastnow.app",
