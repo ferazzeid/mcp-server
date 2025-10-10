@@ -437,7 +437,8 @@ app.post("/mcp", express.json(), async (req, res) => {
               resource: {
                 uri: toolConfig.component,
                 mimeType: "text/html+skybridge",
-                text: component.htmlContent
+                text: component.htmlContent,
+                structuredContent: toolResult.data || toolResult  // Pass data to component
               }
             });
           }
