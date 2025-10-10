@@ -538,12 +538,19 @@ app.get("/sse", async (req, res) => {
     // Add X-Accel-Buffering before transport takes over
     res.setHeader('X-Accel-Buffering', 'no');
     
-    console.log("Creating SSE transport...");
+    // Hook into res.write to log what SSE events are being sent
+    const originalWrite = res.write.bind(res);
+    res.write = function(chunk, ...args) {
+      console.log("📤 SSE WRITE:", chunk.toString());
+      return originalWrite(chunk, ...args);
+    };
+    
+    console.log("Creating SSE transport with endpoint: /messages");
     const transport = new SSEServerTransport("/messages", res);
     console.log("Transport created, connecting server...");
     
     await server.connect(transport);
-    console.log("✅ Server connected! MCP session established.");
+    console.log("✅ Server connected! Waiting for client to POST to /messages...");
     
     // Keep connection alive
     req.on("close", () => {
