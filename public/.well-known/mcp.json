@@ -14,7 +14,7 @@
   },
   "transports": {
     "http": {
-      "url": "https://mcp.fastnow.app/messages",
+      "url": "https://mcp.fastnow.app/mcp",
       "method": "POST"
     }
   },

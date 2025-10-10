@@ -44,7 +44,7 @@ app.get('/.well-known/mcp.json', (req, res) => {
     },
     "transports": {
       "http": {
-        "url": "https://mcp.fastnow.app/messages",
+        "url": "https://mcp.fastnow.app/mcp",
         "method": "POST"
       }
     },
@@ -519,7 +519,7 @@ app.get("/", (req, res) => {
     transport: "HTTP POST (request/response)",
     endpoints: {
       health: "/health",
-      mcp: "/messages",
+      mcp: "/mcp",
       manifest: "/.well-known/mcp.json"
     },
     authentication: {
@@ -537,8 +537,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "mcp-server" });
 });
 
-// OPTIONS for /messages - OAuth discovery
-app.options("/messages", (req, res) => {
+// OPTIONS for /mcp - OAuth discovery
+app.options("/mcp", (req, res) => {
   res.json({
     authentication: {
       type: "oauth2",
@@ -552,7 +552,7 @@ app.options("/messages", (req, res) => {
 });
 
 // MCP HTTP endpoint - simple request/response (no SSE!)
-app.post("/messages", express.json(), async (req, res) => {
+app.post("/mcp", express.json(), async (req, res) => {
   console.log("=== MCP REQUEST ===");
   console.log("Method:", req.body.method);
   console.log("Body:", JSON.stringify(req.body, null, 2));
@@ -737,7 +737,7 @@ app.post("/messages", express.json(), async (req, res) => {
 // Start HTTP server
 app.listen(PORT, () => {
   console.log(`🚀 MCP Server running on http://localhost:${PORT}`);
-  console.log(`📡 MCP endpoint: POST http://localhost:${PORT}/messages`);
+  console.log(`📡 MCP endpoint: POST http://localhost:${PORT}/mcp`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
   console.log(`🔧 Transport: HTTP POST (request/response) - NO SSE`);
 });
