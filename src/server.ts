@@ -1,5 +1,4 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListResourcesRequestSchema,
@@ -47,8 +46,9 @@ app.get('/.well-known/mcp.json', (req, res) => {
       "prompts": false
     },
     "transports": {
-      "sse": {
-        "url": "https://mcp.fastnow.app/sse"
+      "http": {
+        "url": "https://mcp.fastnow.app/messages",
+        "method": "POST"
       }
     },
     "authentication": {
@@ -516,10 +516,10 @@ app.get("/", (req, res) => {
     service: "MCP Server for ChatGPT Apps",
     status: "running",
     version: "1.0.0",
+    transport: "HTTP POST (request/response)",
     endpoints: {
       health: "/health",
-      sse: "/sse",
-      messages: "/messages"
+      mcp: "/messages"
     }
   });
 });
@@ -529,54 +529,105 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "mcp-server" });
 });
 
-// SSE endpoint for MCP
-app.get("/sse", async (req, res) => {
-  console.log("=== NEW SSE CONNECTION ===");
-  console.log("Headers:", JSON.stringify(req.headers, null, 2));
+// MCP HTTP endpoint - simple request/response (no SSE!)
+app.post("/messages", express.json(), async (req, res) => {
+  console.log("=== MCP REQUEST ===");
+  console.log("Method:", req.body.method);
+  console.log("Body:", JSON.stringify(req.body, null, 2));
   
   try {
-    // Add X-Accel-Buffering before transport takes over
-    res.setHeader('X-Accel-Buffering', 'no');
+    const request = req.body;
+    let response;
     
-    // Hook into res.write to log what SSE events are being sent
-    const originalWrite = res.write.bind(res);
-    res.write = function(chunk, ...args) {
-      console.log("📤 SSE WRITE:", chunk.toString());
-      return originalWrite(chunk, ...args);
-    };
+    // Handle MCP methods directly
+    switch (request.method) {
+      case "initialize":
+        console.log("✅ Initialize request received!");
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: {
+            protocolVersion: "2024-11-05",
+            capabilities: {
+              tools: {},
+              resources: {}
+            },
+            serverInfo: {
+              name: "FastNow MCP Server",
+              version: "1.0.0"
+            }
+          }
+        };
+        break;
+        
+      case "tools/list":
+        const toolsResult = await server.request(ListToolsRequestSchema, {});
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: toolsResult
+        };
+        break;
+        
+      case "resources/list":
+        const resourcesResult = await server.request(ListResourcesRequestSchema, {});
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: resourcesResult
+        };
+        break;
+        
+      case "resources/read":
+        const readResult = await server.request(ReadResourceRequestSchema, request.params);
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: readResult
+        };
+        break;
+        
+      case "tools/call":
+        const callResult = await server.request(CallToolRequestSchema, request.params);
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: callResult
+        };
+        break;
+        
+      default:
+        response = {
+          jsonrpc: "2.0",
+          id: request.id,
+          error: {
+            code: -32601,
+            message: `Method not found: ${request.method}`
+          }
+        };
+    }
     
-    console.log("Creating SSE transport with endpoint: /messages");
-    const transport = new SSEServerTransport("/messages", res);
-    console.log("Transport created, connecting server...");
-    
-    await server.connect(transport);
-    console.log("✅ Server connected! Waiting for client to POST to /messages...");
-    
-    // Keep connection alive
-    req.on("close", () => {
-      console.log("=== SSE CONNECTION CLOSED ===");
-    });
+    console.log("📤 MCP RESPONSE:", JSON.stringify(response, null, 2));
+    res.json(response);
     
   } catch (error) {
-    console.error("❌ SSE error:", error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: String(error) });
-    }
+    console.error("❌ MCP error:", error);
+    res.status(500).json({
+      jsonrpc: "2.0",
+      id: req.body.id || null,
+      error: {
+        code: -32603,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    });
   }
-});
-
-// POST endpoint for MCP messages - transport will handle this
-app.post("/messages", express.json(), async (req, res) => {
-  console.log("=== RECEIVED POST TO /messages ===");
-  console.log("Body:", JSON.stringify(req.body, null, 2));
-  // Transport handles the response via SSE
-  res.status(202).end();
 });
 
 // Start HTTP server
 app.listen(PORT, () => {
   console.log(`🚀 MCP Server running on http://localhost:${PORT}`);
-  console.log(`📡 SSE endpoint: http://localhost:${PORT}/sse`);
+  console.log(`📡 MCP endpoint: POST http://localhost:${PORT}/messages`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+  console.log(`🔧 Transport: HTTP POST (request/response) - NO SSE`);
 });
 

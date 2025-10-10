@@ -13,8 +13,9 @@
     "prompts": false
   },
   "transports": {
-    "sse": {
-      "url": "https://mcp.fastnow.app/sse"
+    "http": {
+      "url": "https://mcp.fastnow.app/messages",
+      "method": "POST"
     }
   },
   "authentication": {
