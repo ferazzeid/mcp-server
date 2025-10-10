@@ -16,7 +16,7 @@ import dotenv from "dotenv";
 import { validateTokenAndGetUserId } from "./config/supabase.js";
 import * as FastNowResources from "./resources/fastnow.js";
 import { FASTNOW_TOOLS, OAUTH_SCOPES, SUPABASE_FUNCTIONS_BASE_URL } from "./tools/comprehensive-tools.js";
-import { FASTNOW_COMPONENTS, getComponentByUri } from "./components-config.js";
+import { INLINED_COMPONENTS as FASTNOW_COMPONENTS, getComponentByUri } from "./components-inlined.js";
 
 dotenv.config();
 
@@ -291,11 +291,8 @@ app.post("/mcp", express.json(), async (req, res) => {
               if (tool.component) {
                 toolDef._meta = {
                   "openai/scopes": tool.scopes,
-                  "openai/outputTemplate": tool.component,
-                  "openai/widgetCSP": {
-                    connect_domains: ["https://2533d87e.fastnow-components.pages.dev"],
-                    resource_domains: ["https://2533d87e.fastnow-components.pages.dev"]
-                  }
+                  "openai/outputTemplate": tool.component
+                  // No CSP needed - JavaScript is inlined
                 };
               }
               
