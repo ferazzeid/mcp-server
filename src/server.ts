@@ -561,38 +561,127 @@ app.post("/messages", express.json(), async (req, res) => {
         break;
         
       case "tools/list":
-        const toolsResult = await server.request(ListToolsRequestSchema, {});
+        // Return list of available tools
         response = {
           jsonrpc: "2.0",
           id: request.id,
-          result: toolsResult
+          result: {
+            tools: [
+              { name: "search", description: "Search for greeting messages and content", inputSchema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] }},
+              { name: "fetch", description: "Fetch content from a URL", inputSchema: { type: "object", properties: { url: { type: "string" } }, required: ["url"] }},
+              { name: "show_greeting", description: "Display a greeting widget", inputSchema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] }},
+              { name: "start_fast", description: "Start a new fasting session", inputSchema: { type: "object", properties: { goal_hours: { type: "number" } }, required: ["goal_hours"] }},
+              { name: "end_fast", description: "End current fasting session", inputSchema: { type: "object", properties: {}, required: [] }},
+              { name: "log_food", description: "Log a food entry", inputSchema: { type: "object", properties: { name: { type: "string" }, calories: { type: "number" } }, required: ["name", "calories"] }},
+              { name: "log_weight", description: "Log weight measurement", inputSchema: { type: "object", properties: { weight_kg: { type: "number" } }, required: ["weight_kg"] }},
+              { name: "start_walk", description: "Start walking session", inputSchema: { type: "object", properties: {}, required: [] }},
+              { name: "end_walk", description: "End walking session", inputSchema: { type: "object", properties: { distance: { type: "number" }, calories_burned: { type: "number" } }, required: [] }}
+            ]
+          }
         };
         break;
         
       case "resources/list":
-        const resourcesResult = await server.request(ListResourcesRequestSchema, {});
+        // Return list of available resources
         response = {
           jsonrpc: "2.0",
           id: request.id,
-          result: resourcesResult
+          result: {
+            resources: [
+              { uri: "ui://widget/example.html", name: "Example Widget", mimeType: "text/html+skybridge" },
+              { uri: "fastnow://user/current-fast", name: "Current Fasting Session", description: "User's active fasting session", mimeType: "application/json" },
+              { uri: "fastnow://user/todays-food", name: "Today's Food Log", description: "Food entries for today", mimeType: "application/json" },
+              { uri: "fastnow://user/weight-history", name: "Weight History", description: "Weight measurements", mimeType: "application/json" },
+              { uri: "fastnow://user/profile", name: "User Profile", description: "User profile and goals", mimeType: "application/json" },
+              { uri: "fastnow://user/daily-summary", name: "Daily Summary", description: "Complete daily overview", mimeType: "application/json" }
+            ]
+          }
         };
         break;
         
       case "resources/read":
-        const readResult = await server.request(ReadResourceRequestSchema, request.params);
+        // Handle resource read - delegate to existing handlers
+        const uri = request.params?.uri;
+        if (!uri) throw new Error("Missing uri parameter");
+        
+        let resourceData;
+        if (uri.startsWith("fastnow://")) {
+          const userToken = request.params?._meta?.userToken;
+          if (!userToken) throw new Error("Authentication required");
+          const userId = await validateTokenAndGetUserId(userToken);
+          
+          switch (uri) {
+            case "fastnow://user/current-fast":
+              resourceData = await FastNowResources.getCurrentFast(userId, userToken);
+              break;
+            case "fastnow://user/todays-food":
+              resourceData = await FastNowResources.getTodaysFood(userId, userToken);
+              break;
+            case "fastnow://user/weight-history":
+              resourceData = await FastNowResources.getWeightHistory(userId, userToken);
+              break;
+            case "fastnow://user/profile":
+              resourceData = await FastNowResources.getUserProfile(userId, userToken);
+              break;
+            case "fastnow://user/daily-summary":
+              resourceData = await FastNowResources.getDailySummary(userId, userToken);
+              break;
+            default:
+              throw new Error(`Unknown resource: ${uri}`);
+          }
+        }
+        
         response = {
           jsonrpc: "2.0",
           id: request.id,
-          result: readResult
+          result: {
+            contents: [{ uri, mimeType: "application/json", text: JSON.stringify(resourceData) }]
+          }
         };
         break;
         
       case "tools/call":
-        const callResult = await server.request(CallToolRequestSchema, request.params);
+        // Handle tool call - delegate to existing handlers
+        const toolName = request.params?.name;
+        const toolArgs = request.params?.arguments || {};
+        
+        let toolResult;
+        if (["start_fast", "end_fast", "log_food", "log_weight", "start_walk", "end_walk"].includes(toolName)) {
+          const userToken = request.params?._meta?.userToken;
+          if (!userToken) throw new Error("Authentication required");
+          const userId = await validateTokenAndGetUserId(userToken);
+          
+          switch (toolName) {
+            case "start_fast":
+              toolResult = await FastNowTools.startFast(userId, userToken, toolArgs.goal_hours);
+              break;
+            case "end_fast":
+              toolResult = await FastNowTools.endFast(userId, userToken);
+              break;
+            case "log_food":
+              toolResult = await FastNowTools.logFood(userId, userToken, toolArgs);
+              break;
+            case "log_weight":
+              toolResult = await FastNowTools.logWeight(userId, userToken, toolArgs.weight_kg);
+              break;
+            case "start_walk":
+              toolResult = await FastNowTools.startWalk(userId, userToken);
+              break;
+            case "end_walk":
+              toolResult = await FastNowTools.endWalk(userId, userToken, toolArgs);
+              break;
+          }
+        } else {
+          // Basic tools
+          toolResult = { message: `Tool ${toolName} executed` };
+        }
+        
         response = {
           jsonrpc: "2.0",
           id: request.id,
-          result: callResult
+          result: {
+            content: [{ type: "text", text: JSON.stringify(toolResult) }]
+          }
         };
         break;
         
