@@ -485,8 +485,7 @@ app.get("/", (req, res) => {
       health: "/health",
       sse: "/sse",
       messages: "/messages"
-    },
-    documentation: "https://github.com/ferazzeid/mcp-server"
+    }
   });
 });
 
