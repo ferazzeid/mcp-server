@@ -1,0 +1,28 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
+  "name": "FastNow MCP Server",
+  "description": "Track your fasting, nutrition, and weight with AI assistance through FastNow",
+  "version": "1.0.0",
+  "author": {
+    "name": "FastNow",
+    "url": "https://fastnow.app"
+  },
+  "capabilities": {
+    "resources": true,
+    "tools": true,
+    "prompts": false
+  },
+  "transports": {
+    "sse": {
+      "url": "https://mcp.fastnow.app/sse"
+    }
+  },
+  "authentication": {
+    "type": "bearer",
+    "description": "Requires user's Supabase JWT token for accessing FastNow data"
+  },
+  "homepage": "https://fastnow.app",
+  "documentation": "https://mcp.fastnow.app",
+  "privacy_policy": "https://fastnow.app/privacy",
+  "terms_of_service": "https://fastnow.app/terms"
+}
