@@ -705,7 +705,9 @@ app.post("/mcp", express.json(), async (req, res) => {
         
         let resourceData;
         if (uri.startsWith("fastnow://")) {
-          const userToken = request.params?._meta?.userToken;
+          // Extract token from Authorization header (ChatGPT sends it here after OAuth)
+          const authHeader = req.headers.authorization;
+          const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
           if (!userToken) throw new Error("Authentication required");
           const userId = await validateTokenAndGetUserId(userToken);
           
@@ -746,7 +748,9 @@ app.post("/mcp", express.json(), async (req, res) => {
         
         let toolResult;
         if (["start_fast", "end_fast", "log_food", "log_weight", "start_walk", "end_walk"].includes(toolName)) {
-          const userToken = request.params?._meta?.userToken;
+          // Extract token from Authorization header (ChatGPT sends it here after OAuth)
+          const authHeader = req.headers.authorization;
+          const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
           if (!userToken) throw new Error("Authentication required");
           const userId = await validateTokenAndGetUserId(userToken);
           
