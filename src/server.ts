@@ -421,14 +421,33 @@ app.post("/mcp", express.json(), async (req, res) => {
         
         console.log(`✅ Tool result:`, JSON.stringify(toolResult, null, 2));
         
+        // Build response content
+        const responseContent: any[] = [{ 
+          type: "text", 
+          text: JSON.stringify(toolResult, null, 2) 
+        }];
+
+        // If tool has a linked component, include it in the response
+        if (toolConfig.component) {
+          const component = getComponentByUri(toolConfig.component);
+          if (component) {
+            console.log(`🎨 Including component: ${component.name}`);
+            responseContent.push({
+              type: "resource",
+              resource: {
+                uri: toolConfig.component,
+                mimeType: "text/html+skybridge",
+                text: component.htmlContent
+              }
+            });
+          }
+        }
+        
         response = {
           jsonrpc: "2.0",
           id: request.id,
           result: {
-            content: [{ 
-              type: "text", 
-              text: JSON.stringify(toolResult, null, 2) 
-            }]
+            content: responseContent
           }
         };
         break;
