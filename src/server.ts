@@ -32,7 +32,7 @@ app.get('/.well-known/mcp.json', (req, res) => {
     "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
     "name": "FastNow MCP Server",
     "description": "Track your fasting, nutrition, and weight with AI assistance through FastNow",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": {
       "name": "FastNow",
       "url": "https://fastnow.app"
@@ -47,6 +47,25 @@ app.get('/.well-known/mcp.json', (req, res) => {
         "url": "https://mcp.fastnow.app/mcp",
         "method": "POST"
       }
+    },
+    "authentication": {
+      "type": "oauth2",
+      "authorization_url": "https://go.fastnow.app/oauth/authorize",
+      "token_url": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      "registration_url": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-register",
+      "client_id": "chatgpt-fastnow",
+      "scopes": "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
+    },
+    "protectedResourceMetadata": {
+      "issuer": "https://go.fastnow.app",
+      "authorization_endpoint": "https://go.fastnow.app/oauth/authorize",
+      "token_endpoint": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      "registration_endpoint": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-register",
+      "scopes_supported": ["read:fasting", "write:fasting", "read:food", "write:food", "read:goals", "write:goals", "read:stats"],
+      "response_types_supported": ["code"],
+      "grant_types_supported": ["authorization_code", "refresh_token"],
+      "code_challenge_methods_supported": ["S256"],
+      "token_endpoint_auth_methods_supported": ["client_secret_post", "none"]
     },
     "homepage": "https://fastnow.app",
     "documentation": "https://mcp.fastnow.app",
