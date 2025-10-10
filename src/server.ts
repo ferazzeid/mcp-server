@@ -9,6 +9,9 @@ import {
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { validateTokenAndGetUserId } from "./config/supabase.js";
+import * as FastNowResources from "./resources/fastnow.js";
+import * as FastNowTools from "./tools/fastnow.js";
 
 dotenv.config();
 
@@ -76,7 +79,7 @@ const EXAMPLE_WIDGET_HTML = `
 </html>
 `.trim();
 
-// Register widget resource
+// Register resources
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   return {
     resources: [
@@ -85,12 +88,45 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
         name: "Example Widget",
         mimeType: "text/html+skybridge",
       },
+      {
+        uri: "fastnow://user/current-fast",
+        name: "Current Fasting Session",
+        description: "User's active fasting session with progress",
+        mimeType: "application/json",
+      },
+      {
+        uri: "fastnow://user/todays-food",
+        name: "Today's Food Log",
+        description: "All food entries for today with nutrition totals",
+        mimeType: "application/json",
+      },
+      {
+        uri: "fastnow://user/weight-history",
+        name: "Weight History",
+        description: "Recent weight measurements and trends",
+        mimeType: "application/json",
+      },
+      {
+        uri: "fastnow://user/profile",
+        name: "User Profile",
+        description: "User profile with goals and settings",
+        mimeType: "application/json",
+      },
+      {
+        uri: "fastnow://user/daily-summary",
+        name: "Daily Summary",
+        description: "Complete overview of today's activity",
+        mimeType: "application/json",
+      },
     ],
   };
 });
 
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  if (request.params.uri === "ui://widget/example.html") {
+  const uri = request.params.uri;
+  
+  // Widget resource (no auth needed)
+  if (uri === "ui://widget/example.html") {
     return {
       contents: [
         {
@@ -101,13 +137,65 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       ],
     };
   }
-  throw new Error("Resource not found");
+  
+  // FastNow resources (require authentication)
+  if (uri.startsWith("fastnow://")) {
+    // Get auth token from request metadata
+    const userToken = (request.params as any)._meta?.userToken;
+    
+    if (!userToken) {
+      throw new Error("Authentication required. Please provide a user token.");
+    }
+    
+    // Validate token and get user ID
+    const userId = await validateTokenAndGetUserId(userToken);
+    
+    let data;
+    
+    switch (uri) {
+      case "fastnow://user/current-fast":
+        data = await FastNowResources.getCurrentFast(userId, userToken);
+        break;
+      
+      case "fastnow://user/todays-food":
+        data = await FastNowResources.getTodaysFood(userId, userToken);
+        break;
+      
+      case "fastnow://user/weight-history":
+        data = await FastNowResources.getWeightHistory(userId, userToken);
+        break;
+      
+      case "fastnow://user/profile":
+        data = await FastNowResources.getUserProfile(userId, userToken);
+        break;
+      
+      case "fastnow://user/daily-summary":
+        data = await FastNowResources.getDailySummary(userId, userToken);
+        break;
+      
+      default:
+        throw new Error(`Unknown FastNow resource: ${uri}`);
+    }
+    
+    return {
+      contents: [
+        {
+          uri: uri,
+          mimeType: "application/json",
+          text: JSON.stringify(data, null, 2),
+        },
+      ],
+    };
+  }
+  
+  throw new Error(`Resource not found: ${uri}`);
 });
 
-// Register MCP standard tools
+// Register tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
+      // Example tools
       {
         name: "search",
         description: "Search for greeting messages and content",
@@ -155,15 +243,128 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           "openai/toolInvocation/invoked": "Greeting displayed!",
         },
       },
+      // FastNow tools
+      {
+        name: "start_fast",
+        description: "Start a new fasting session with a specified goal duration",
+        inputSchema: {
+          type: "object",
+          properties: {
+            goal_hours: {
+              type: "number",
+              description: "Fasting goal duration in hours (e.g., 16 for 16:8 fasting)",
+              minimum: 1,
+              maximum: 72,
+            },
+          },
+          required: ["goal_hours"],
+        },
+      },
+      {
+        name: "end_fast",
+        description: "End the current active fasting session",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "log_food",
+        description: "Log a food entry with nutritional information",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "Name of the food item",
+            },
+            calories: {
+              type: "number",
+              description: "Calories in the food",
+              minimum: 0,
+            },
+            carbs: {
+              type: "number",
+              description: "Carbohydrates in grams",
+              minimum: 0,
+            },
+            protein: {
+              type: "number",
+              description: "Protein in grams (optional)",
+              minimum: 0,
+            },
+            fat: {
+              type: "number",
+              description: "Fat in grams (optional)",
+              minimum: 0,
+            },
+            serving_size: {
+              type: "number",
+              description: "Serving size in grams (default: 100)",
+              minimum: 0,
+            },
+          },
+          required: ["name", "calories", "carbs"],
+        },
+      },
+      {
+        name: "log_weight",
+        description: "Log a weight measurement",
+        inputSchema: {
+          type: "object",
+          properties: {
+            weight_kg: {
+              type: "number",
+              description: "Weight in kilograms",
+              minimum: 20,
+              maximum: 300,
+            },
+          },
+          required: ["weight_kg"],
+        },
+      },
+      {
+        name: "start_walk",
+        description: "Start a new walking/exercise session",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "end_walk",
+        description: "End the current walking session and log results",
+        inputSchema: {
+          type: "object",
+          properties: {
+            distance_meters: {
+              type: "number",
+              description: "Distance walked in meters (optional)",
+              minimum: 0,
+            },
+            calories_burned: {
+              type: "number",
+              description: "Estimated calories burned (optional)",
+              minimum: 0,
+            },
+          },
+        },
+      },
     ],
   };
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  if (request.params.name === "search") {
-    const query = (request.params.arguments as any)?.query || "";
+  const toolName = request.params.name;
+  const args = request.params.arguments as any;
+  
+  // Get auth token for FastNow tools
+  const userToken = (request.params as any)._meta?.userToken;
+  
+  // Example tools (no auth needed)
+  if (toolName === "search") {
+    const query = args?.query || "";
     
-    // Mock search results - in a real app, this would search your data source
     const results = [
       {
         id: "greeting-1",
@@ -187,10 +388,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 
-  if (request.params.name === "fetch") {
-    const id = (request.params.arguments as any)?.id || "";
+  if (toolName === "fetch") {
+    const id = args?.id || "";
     
-    // Mock fetch result - in a real app, this would fetch from your data source
     const document = {
       id: id,
       title: `Greeting Message ${id}`,
@@ -212,8 +412,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 
-  if (request.params.name === "show_greeting") {
-    const name = (request.params.arguments as any)?.name || "World";
+  if (toolName === "show_greeting") {
+    const name = args?.name || "World";
     return {
       content: [
         {
@@ -227,7 +427,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
   
-  throw new Error("Tool not found");
+  // FastNow tools (require authentication)
+  if (!userToken) {
+    throw new Error("Authentication required. Please provide a user token.");
+  }
+  
+  const userId = await validateTokenAndGetUserId(userToken);
+  
+  let result;
+  
+  switch (toolName) {
+    case "start_fast":
+      result = await FastNowTools.startFast(userId, userToken, args.goal_hours);
+      break;
+    
+    case "end_fast":
+      result = await FastNowTools.endFast(userId, userToken);
+      break;
+    
+    case "log_food":
+      result = await FastNowTools.logFood(userId, userToken, args);
+      break;
+    
+    case "log_weight":
+      result = await FastNowTools.logWeight(userId, userToken, args.weight_kg);
+      break;
+    
+    case "start_walk":
+      result = await FastNowTools.startWalk(userId, userToken);
+      break;
+    
+    case "end_walk":
+      result = await FastNowTools.endWalk(userId, userToken, args);
+      break;
+    
+    default:
+      throw new Error(`Tool not found: ${toolName}`);
+  }
+  
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(result, null, 2),
+      },
+    ],
+  };
 });
 
 // Root endpoint
