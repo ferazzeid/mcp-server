@@ -48,13 +48,6 @@ app.get('/.well-known/mcp.json', (req, res) => {
         "method": "POST"
       }
     },
-    "authentication": {
-      "type": "oauth2",
-      "authorization_url": "https://go.fastnow.app/oauth/authorize",
-      "token_url": "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
-      "client_id": "chatgpt-fastnow",
-      "scopes": "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
-    },
     "homepage": "https://fastnow.app",
     "documentation": "https://mcp.fastnow.app",
     "privacy_policy": "https://fastnow.app/privacy",
@@ -522,12 +515,16 @@ app.get("/", (req, res) => {
       mcp: "/mcp",
       manifest: "/.well-known/mcp.json"
     },
-    authentication: {
-      type: "oauth2",
-      authorization_url: "https://go.fastnow.app/oauth/authorize",
-      token_url: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
-      client_id: "chatgpt-fastnow",
-      scopes: "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
+    protectedResourceMetadata: {
+      issuer: "https://go.fastnow.app",
+      authorization_endpoint: "https://go.fastnow.app/oauth/authorize",
+      token_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      registration_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-register",
+      scopes_supported: ["read:fasting", "write:fasting", "read:food", "write:food", "read:goals", "write:goals", "read:stats"],
+      response_types_supported: ["code"],
+      grant_types_supported: ["authorization_code", "refresh_token"],
+      code_challenge_methods_supported: ["S256"],
+      token_endpoint_auth_methods_supported: ["client_secret_post", "none"]
     }
   });
 });
@@ -537,17 +534,14 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "mcp-server" });
 });
 
-// OPTIONS for /mcp - OAuth discovery
-app.options("/mcp", (req, res) => {
+// GET handler for /mcp (for browser access)
+app.get("/mcp", (req, res) => {
   res.json({
-    authentication: {
-      type: "oauth2",
-      authorization_url: "https://go.fastnow.app/oauth/authorize",
-      token_url: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
-      client_id: "chatgpt-fastnow",
-      scopes: "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
-    },
-    manifest: "https://mcp.fastnow.app/.well-known/mcp.json"
+    service: "MCP Endpoint",
+    method: "POST",
+    description: "This endpoint accepts MCP protocol requests via POST",
+    usage: "ChatGPT will POST MCP requests here",
+    status: "ready"
   });
 });
 
@@ -577,6 +571,17 @@ app.post("/mcp", express.json(), async (req, res) => {
             serverInfo: {
               name: "FastNow MCP Server",
               version: "1.0.0"
+            },
+            protectedResourceMetadata: {
+              issuer: "https://go.fastnow.app",
+              authorization_endpoint: "https://go.fastnow.app/oauth/authorize",
+              token_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+              registration_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-register",
+              scopes_supported: ["read:fasting", "write:fasting", "read:food", "write:food", "read:goals", "write:goals", "read:stats"],
+              response_types_supported: ["code"],
+              grant_types_supported: ["authorization_code", "refresh_token"],
+              code_challenge_methods_supported: ["S256"],
+              token_endpoint_auth_methods_supported: ["client_secret_post", "none"]
             }
           }
         };
@@ -723,14 +728,36 @@ app.post("/mcp", express.json(), async (req, res) => {
     
   } catch (error) {
     console.error("❌ MCP error:", error);
-    res.status(500).json({
-      jsonrpc: "2.0",
-      id: req.body.id || null,
-      error: {
-        code: -32603,
-        message: error instanceof Error ? error.message : String(error)
-      }
-    });
+    
+    // Check if this is an authentication error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isAuthError = errorMessage.toLowerCase().includes("authentication required") || 
+                        errorMessage.toLowerCase().includes("unauthorized") ||
+                        errorMessage.toLowerCase().includes("invalid token");
+    
+    if (isAuthError) {
+      // Return 401 with WWW-Authenticate header for auth errors
+      res.setHeader('WWW-Authenticate', 'Bearer realm="https://mcp.fastnow.app", error="invalid_token", error_description="' + errorMessage + '"');
+      res.setHeader('Link', '<https://mcp.fastnow.app/.well-known/mcp.json>; rel="oauth-authorization-server"');
+      res.status(401).json({
+        jsonrpc: "2.0",
+        id: req.body.id || null,
+        error: {
+          code: -32001,
+          message: errorMessage
+        }
+      });
+    } else {
+      // Return 500 for other errors
+      res.status(500).json({
+        jsonrpc: "2.0",
+        id: req.body.id || null,
+        error: {
+          code: -32603,
+          message: errorMessage
+        }
+      });
+    }
   }
 });
 
