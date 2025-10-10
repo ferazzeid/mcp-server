@@ -15,6 +15,7 @@ export interface MCPTool {
   method: string;
   scopes: string[];
   component?: string; // Optional UI component URI
+  readOnlyHint?: boolean; // True for read-only tools (skips confirmation)
 }
 
 export const FASTNOW_TOOLS: MCPTool[] = [
@@ -23,20 +24,27 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   // =====================================
   {
     name: "get_current_fast",
-    description: "Get the user's current active fasting session with elapsed time and progress",
+    description: "Use this when the user asks about their current fast, fasting progress, elapsed time, how long they've been fasting, or whether they're still fasting. Returns active fasting session with start time, goal, elapsed hours, and completion percentage. Do not use for past fasting history or statistics.",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-fasting/current",
     method: "GET",
     scopes: ["read:fasting"],
-    component: "ui://widget/fasting-progress.html"
+    component: "ui://widget/fasting-progress.html",
+    readOnlyHint: true
   },
   {
     name: "start_fast",
-    description: "Start a new fasting session with a goal duration in hours (default: 16)",
+    description: "Use this when the user wants to begin a new fasting period. Common phrases: 'start fasting', 'begin my fast', 'I want to fast for X hours'. Defaults to 16-hour intermittent fasting if no duration specified. Do not use if user already has an active fast.",
     inputSchema: {
       type: "object",
       properties: {
-        goal_hours: { type: "number", description: "Goal duration in hours (e.g., 16, 18, 24)" }
+        goal_hours: { 
+          type: "number", 
+          description: "Fasting goal duration in hours. Common values: 12 (beginner), 14 (moderate), 16 (standard intermittent fasting), 18 (warrior diet), 20-24 (OMAD), 36-72 (extended fasting). Defaults to 16 if not specified.",
+          minimum: 1,
+          maximum: 72,
+          examples: [16, 18, 24]
+        }
       },
       required: []
     },
@@ -46,7 +54,7 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   },
   {
     name: "end_fast",
-    description: "End the current active fasting session",
+    description: "Use this when the user wants to stop or complete their current fast. Common phrases: 'end my fast', 'stop fasting', 'I'm done fasting', 'break my fast'. Only works if there's an active fasting session.",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-fasting/end",
     method: "POST",
@@ -99,33 +107,35 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   },
   {
     name: "get_fasting_history",
-    description: "Get past fasting sessions with optional filters",
+    description: "Use this when the user asks about past fasts, fasting history, previous fasting sessions, or fasts from specific dates. Returns list of completed and ended fasting sessions. Do not use for current active fast (use get_current_fast instead).",
     inputSchema: {
       type: "object",
       properties: {
-        limit: { type: "number", description: "Number of sessions to return (default: 10)" },
-        status: { type: "string", description: "Filter by status: completed, ended_early" }
+        limit: { type: "number", description: "Number of sessions to return (default: 10)", examples: [5, 10, 20] },
+        status: { type: "string", description: "Filter by status: 'completed' (reached goal), 'ended_early' (stopped before goal)", examples: ["completed", "ended_early"] }
       },
       required: []
     },
     endpoint: "/gpt-fasting/history",
     method: "GET",
-    scopes: ["read:fasting"]
+    scopes: ["read:fasting"],
+    readOnlyHint: true
   },
   {
     name: "get_fasting_stats",
-    description: "Get fasting statistics (total fasts, total hours, average hours, longest fast)",
+    description: "Use this when the user asks for fasting statistics, progress summary, how many times they've fasted, total fasting hours, average fast length, or their longest fast. Returns aggregated statistics for the specified period. Do not use for current active fast (use get_current_fast instead).",
     inputSchema: {
       type: "object",
       properties: {
-        period: { type: "string", description: "Time period: all, week, month (default: all)" }
+        period: { type: "string", description: "Time period for stats: 'all' (lifetime), 'week' (last 7 days), 'month' (last 30 days). Defaults to 'all'.", examples: ["all", "week", "month"] }
       },
       required: []
     },
     endpoint: "/gpt-fasting/stats",
     method: "GET",
     scopes: ["read:fasting"],
-    component: "ui://widget/stats-summary.html"
+    component: "ui://widget/stats-summary.html",
+    readOnlyHint: true
   },
   {
     name: "get_fasting_streak",
@@ -141,26 +151,27 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   // =====================================
   {
     name: "get_todays_food",
-    description: "Get all food entries for today with totals (calories, carbs, protein, fat)",
+    description: "Use this when the user asks what they ate today, their food log, calorie count, macros consumed, or daily nutrition. Returns all food entries for today with totals for calories, carbs, protein, and fat. Do not use for specific dates in the past (use get_food_by_date instead).",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-food/today",
     method: "GET",
     scopes: ["read:food"],
-    component: "ui://widget/food-log.html"
+    component: "ui://widget/food-log.html",
+    readOnlyHint: true
   },
   {
     name: "log_food",
-    description: "Log a new food entry with nutrition information",
+    description: "Use this when the user wants to track food they ate or are about to eat. Common phrases: 'log my lunch', 'track 200g chicken', 'I ate a salad', 'add food'. Requires food name and calorie count at minimum. If user provides weight/quantity (e.g., '200g chicken'), use serving_size parameter.",
     inputSchema: {
       type: "object",
       properties: {
-        name: { type: "string", description: "Name of the food" },
-        calories: { type: "number", description: "Calories (kcal)" },
-        carbs: { type: "number", description: "Carbohydrates (g)" },
-        protein: { type: "number", description: "Protein (g)" },
-        fat: { type: "number", description: "Fat (g)" },
-        serving_size: { type: "number", description: "Serving size in grams (default: 1)" },
-        consumed: { type: "boolean", description: "Whether already consumed (default: true)" }
+        name: { type: "string", description: "Name of the food item (e.g., 'Grilled chicken breast', 'Caesar salad', 'Banana')", examples: ["Grilled chicken breast", "Brown rice", "Greek yogurt"] },
+        calories: { type: "number", description: "Total calories in kcal for this serving", examples: [165, 350, 100] },
+        carbs: { type: "number", description: "Carbohydrates in grams (optional)", examples: [0, 45, 12] },
+        protein: { type: "number", description: "Protein in grams (optional)", examples: [31, 8, 10] },
+        fat: { type: "number", description: "Fat in grams (optional)", examples: [3.6, 15, 0.4] },
+        serving_size: { type: "number", description: "Serving size in grams (default: 100g)", examples: [100, 200, 85] },
+        consumed: { type: "boolean", description: "Whether already consumed (default: true). Set false for meal planning." }
       },
       required: ["name", "calories"]
     },
@@ -346,12 +357,13 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   },
   {
     name: "get_weight_progress",
-    description: "Get weight loss progress (starting weight, current, target, percentage complete)",
+    description: "Use this when the user asks about weight loss progress, how much weight they've lost, distance to goal weight, or weight journey. Returns starting weight, current weight, target weight, and percentage of goal completed. Includes a visual chart of weight history.",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-profile/weight/progress",
     method: "GET",
     scopes: ["read:profile"],
-    component: "ui://widget/weight-progress.html"
+    component: "ui://widget/weight-progress.html",
+    readOnlyHint: true
   },
   {
     name: "get_bmi",
@@ -417,21 +429,23 @@ export const FASTNOW_TOOLS: MCPTool[] = [
   // =====================================
   {
     name: "get_goals",
-    description: "Get all user goals (active and completed)",
+    description: "Use this when the user asks to see their goals, what they're working toward, or their goal progress. Returns all goals (both active and completed) with progress tracking. Use this for general goal review.",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-goals-motivators/goals",
     method: "GET",
     scopes: ["read:goals"],
-    component: "ui://widget/goals-dashboard.html"
+    component: "ui://widget/goals-dashboard.html",
+    readOnlyHint: true
   },
   {
     name: "get_active_goals",
-    description: "Get only active (not completed) goals",
+    description: "Use this when the user asks specifically about current goals, ongoing goals, or what they're currently working on. Returns only active (not completed) goals. Prefer this over get_goals when user wants to focus on incomplete tasks.",
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-goals-motivators/goals/active",
     method: "GET",
     scopes: ["read:goals"],
-    component: "ui://widget/goals-dashboard.html"
+    component: "ui://widget/goals-dashboard.html",
+    readOnlyHint: true
   },
   {
     name: "create_goal",

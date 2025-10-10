@@ -281,6 +281,11 @@ app.post("/mcp", express.json(), async (req, res) => {
                 inputSchema: tool.inputSchema
               };
               
+              // Add readOnlyHint for GET tools
+              if (tool.readOnlyHint) {
+                toolDef.readOnlyHint = true;
+              }
+              
               // Add component metadata if tool has a linked component
               if (tool.component) {
                 toolDef._meta = {
