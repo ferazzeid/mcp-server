@@ -26,6 +26,21 @@ app.use(cors({
 
 app.use(express.json());
 
+// OAuth Authorization Server Metadata (RFC 8414)
+app.get('/.well-known/oauth-authorization-server', (req, res) => {
+  res.json({
+    issuer: "https://go.fastnow.app",
+    authorization_endpoint: "https://go.fastnow.app/oauth/authorize",
+    token_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+    registration_endpoint: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-register",
+    scopes_supported: ["read:fasting", "write:fasting", "read:food", "write:food", "read:goals", "write:goals", "read:stats"],
+    response_types_supported: ["code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
+    code_challenge_methods_supported: ["S256"],
+    token_endpoint_auth_methods_supported: ["client_secret_post", "none"]
+  });
+});
+
 // MCP Discovery endpoint (must be BEFORE static middleware!)
 app.get('/.well-known/mcp.json', (req, res) => {
   res.json({
