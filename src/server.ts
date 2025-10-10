@@ -510,7 +510,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   };
 });
 
-// Root endpoint
+// Root endpoint - also serve OAuth discovery info
 app.get("/", (req, res) => {
   res.json({
     service: "MCP Server for ChatGPT Apps",
@@ -519,7 +519,15 @@ app.get("/", (req, res) => {
     transport: "HTTP POST (request/response)",
     endpoints: {
       health: "/health",
-      mcp: "/messages"
+      mcp: "/messages",
+      manifest: "/.well-known/mcp.json"
+    },
+    authentication: {
+      type: "oauth2",
+      authorization_url: "https://go.fastnow.app/oauth/authorize",
+      token_url: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      client_id: "chatgpt-fastnow",
+      scopes: "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
     }
   });
 });
@@ -527,6 +535,20 @@ app.get("/", (req, res) => {
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "mcp-server" });
+});
+
+// OPTIONS for /messages - OAuth discovery
+app.options("/messages", (req, res) => {
+  res.json({
+    authentication: {
+      type: "oauth2",
+      authorization_url: "https://go.fastnow.app/oauth/authorize",
+      token_url: "https://texnkijwcygodtywgedm.supabase.co/functions/v1/oauth-token",
+      client_id: "chatgpt-fastnow",
+      scopes: "read:fasting write:fasting read:food write:food read:goals write:goals read:stats"
+    },
+    manifest: "https://mcp.fastnow.app/.well-known/mcp.json"
+  });
 });
 
 // MCP HTTP endpoint - simple request/response (no SSE!)
