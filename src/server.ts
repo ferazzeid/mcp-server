@@ -16,6 +16,7 @@ import dotenv from "dotenv";
 import { validateTokenAndGetUserId } from "./config/supabase.js";
 import * as FastNowResources from "./resources/fastnow.js";
 import { FASTNOW_TOOLS, OAUTH_SCOPES, SUPABASE_FUNCTIONS_BASE_URL } from "./tools/comprehensive-tools.js";
+import { FASTNOW_COMPONENTS, getComponentByUri } from "./components-config.js";
 
 dotenv.config();
 
@@ -181,7 +182,7 @@ async function proxyToolCallToSupabase(
       endpoint = endpoint.replace(`{${key}}`, args[key]);
     });
 
-    const url = `${SUPABASE_FUNCTIONS_BASE_URL}${endpoint}`;
+    let url = `${SUPABASE_FUNCTIONS_BASE_URL}${endpoint}`;
     
     // Build request options
     const options: RequestInit = {
@@ -273,11 +274,28 @@ app.post("/mcp", express.json(), async (req, res) => {
           jsonrpc: "2.0",
           id: request.id,
           result: {
-            tools: FASTNOW_TOOLS.map(tool => ({
-              name: tool.name,
-              description: tool.description,
-              inputSchema: tool.inputSchema
-            }))
+            tools: FASTNOW_TOOLS.map(tool => {
+              const toolDef: any = {
+                name: tool.name,
+                description: tool.description,
+                inputSchema: tool.inputSchema
+              };
+              
+              // Add component metadata if tool has a linked component
+              if (tool.component) {
+                toolDef._meta = {
+                  "openai/scopes": tool.scopes,
+                  "openai/outputTemplate": tool.component,
+                  "openai/widgetCSP": {
+                    "connect-src": ["https://fastnow-components.pages.dev"],
+                    "script-src": ["https://fastnow-components.pages.dev"],
+                    "style-src": ["https://fastnow-components.pages.dev"]
+                  }
+                };
+              }
+              
+              return toolDef;
+            })
           }
         };
         break;
@@ -288,11 +306,20 @@ app.post("/mcp", express.json(), async (req, res) => {
           id: request.id,
           result: {
             resources: [
+              // Data resources
               { uri: "fastnow://user/current-fast", name: "Current Fasting Session", mimeType: "application/json" },
               { uri: "fastnow://user/todays-food", name: "Today's Food Log", mimeType: "application/json" },
               { uri: "fastnow://user/weight-history", name: "Weight History", mimeType: "application/json" },
               { uri: "fastnow://user/profile", name: "User Profile", mimeType: "application/json" },
-              { uri: "fastnow://user/daily-summary", name: "Daily Summary", mimeType: "application/json" }
+              { uri: "fastnow://user/daily-summary", name: "Daily Summary", mimeType: "application/json" },
+              
+              // UI Component resources
+              ...FASTNOW_COMPONENTS.map(comp => ({
+                uri: comp.uri,
+                name: comp.name,
+                description: comp.description,
+                mimeType: "text/html+skybridge"
+              }))
             ]
           }
         };
@@ -302,6 +329,28 @@ app.post("/mcp", express.json(), async (req, res) => {
         const uri = request.params?.uri;
         if (!uri) throw new Error("Missing uri parameter");
         
+        // Check if this is a UI component resource
+        if (uri.startsWith("ui://widget/")) {
+          const component = getComponentByUri(uri);
+          if (!component) {
+            throw new Error(`Unknown component: ${uri}`);
+          }
+          
+          response = {
+            jsonrpc: "2.0",
+            id: request.id,
+            result: {
+              contents: [{
+                uri,
+                mimeType: "text/html+skybridge",
+                text: component.htmlContent
+              }]
+            }
+          };
+          break;
+        }
+        
+        // For data resources, require authentication
         const authHeader = req.headers.authorization;
         const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
         if (!userToken) throw new Error("Authentication required");

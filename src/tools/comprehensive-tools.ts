@@ -14,6 +14,7 @@ export interface MCPTool {
   endpoint: string;
   method: string;
   scopes: string[];
+  component?: string; // Optional UI component URI
 }
 
 export const FASTNOW_TOOLS: MCPTool[] = [
@@ -26,7 +27,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-fasting/current",
     method: "GET",
-    scopes: ["read:fasting"]
+    scopes: ["read:fasting"],
+    component: "ui://widget/fasting-progress.html"
   },
   {
     name: "start_fast",
@@ -122,7 +124,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     },
     endpoint: "/gpt-fasting/stats",
     method: "GET",
-    scopes: ["read:fasting"]
+    scopes: ["read:fasting"],
+    component: "ui://widget/stats-summary.html"
   },
   {
     name: "get_fasting_streak",
@@ -142,7 +145,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-food/today",
     method: "GET",
-    scopes: ["read:food"]
+    scopes: ["read:food"],
+    component: "ui://widget/food-log.html"
   },
   {
     name: "log_food",
@@ -346,7 +350,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-profile/weight/progress",
     method: "GET",
-    scopes: ["read:profile"]
+    scopes: ["read:profile"],
+    component: "ui://widget/weight-progress.html"
   },
   {
     name: "get_bmi",
@@ -416,7 +421,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-goals-motivators/goals",
     method: "GET",
-    scopes: ["read:goals"]
+    scopes: ["read:goals"],
+    component: "ui://widget/goals-dashboard.html"
   },
   {
     name: "get_active_goals",
@@ -424,7 +430,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-goals-motivators/goals/active",
     method: "GET",
-    scopes: ["read:goals"]
+    scopes: ["read:goals"],
+    component: "ui://widget/goals-dashboard.html"
   },
   {
     name: "create_goal",
@@ -516,7 +523,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-activity/walking/current",
     method: "GET",
-    scopes: ["read:activity"]
+    scopes: ["read:activity"],
+    component: "ui://widget/activity-tracker.html"
   },
   {
     name: "start_walk",
@@ -540,7 +548,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-activity/walking/today",
     method: "GET",
-    scopes: ["read:activity"]
+    scopes: ["read:activity"],
+    component: "ui://widget/activity-tracker.html"
   },
   {
     name: "log_activity",
@@ -638,7 +647,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-stats/overall",
     method: "GET",
-    scopes: ["read:stats"]
+    scopes: ["read:stats"],
+    component: "ui://widget/stats-summary.html"
   },
 
   // =====================================
@@ -650,7 +660,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-journey/current",
     method: "GET",
-    scopes: ["read:journey"]
+    scopes: ["read:journey"],
+    component: "ui://widget/journey-tracker.html"
   },
   {
     name: "get_journey_day",
@@ -658,7 +669,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-journey/day",
     method: "GET",
-    scopes: ["read:journey"]
+    scopes: ["read:journey"],
+    component: "ui://widget/journey-tracker.html"
   },
   {
     name: "start_journey",
@@ -718,7 +730,8 @@ export const FASTNOW_TOOLS: MCPTool[] = [
     inputSchema: { type: "object", properties: {}, required: [] },
     endpoint: "/gpt-settings",
     method: "GET",
-    scopes: ["read:settings"]
+    scopes: ["read:settings"],
+    component: "ui://widget/settings-panel.html"
   },
   {
     name: "set_theme",

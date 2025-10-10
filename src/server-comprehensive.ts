@@ -181,7 +181,7 @@ async function proxyToolCallToSupabase(
       endpoint = endpoint.replace(`{${key}}`, args[key]);
     });
 
-    const url = `${SUPABASE_FUNCTIONS_BASE_URL}${endpoint}`;
+    let url = `${SUPABASE_FUNCTIONS_BASE_URL}${endpoint}`;
     
     // Build request options
     const options: RequestInit = {

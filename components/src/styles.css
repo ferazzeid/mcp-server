@@ -1,0 +1,517 @@
+/* FastNow MCP Components - Universal Styles */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Widget Container */
+.fastnow-widget {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Widget Header */
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.widget-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.entry-count {
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 48px 24px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Progress Container (Fasting) */
+.progress-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 32px 0;
+}
+
+.progress-ring {
+  position: relative;
+}
+
+.progress-circle {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progress-text {
+  position: absolute;
+  text-align: center;
+}
+
+.time-display {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-display .separator {
+  color: #9ca3af;
+  margin: 0 2px;
+}
+
+.goal-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.progress-percentage {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+  margin-top: 8px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.stat-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-card.success {
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+.stat-icon {
+  font-size: 24px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #1a1a1a;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.btn-icon:hover {
+  background: #f3f4f6;
+}
+
+/* Motivational Message */
+.motivational-message {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+  margin-top: 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.motivational-message.success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+}
+
+/* Calorie Progress (Food Log) */
+.calorie-progress-section {
+  margin-bottom: 24px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.progress-value {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-fill.over-goal {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.warning-text {
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Macros Grid (Food Log) */
+.macros-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.macro-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid transparent;
+}
+
+.macro-card.carbs {
+  border-color: #3b82f6;
+}
+
+.macro-card.protein {
+  border-color: #10b981;
+}
+
+.macro-card.fat {
+  border-color: #f59e0b;
+}
+
+.macro-icon {
+  font-size: 28px;
+}
+
+.macro-info {
+  flex: 1;
+}
+
+.macro-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.macro-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.macro-percent {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Food Entries List */
+.food-entries h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.food-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.food-entry.not-consumed {
+  opacity: 0.5;
+}
+
+.entry-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.entry-details {
+  flex: 1;
+}
+
+.entry-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.entry-macros {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.delete-btn {
+  opacity: 0.6;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+/* Weight Progress Specific */
+.progress-overview {
+  margin-bottom: 24px;
+}
+
+.weight-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.current-weight, .target-weight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-weight .label, .target-weight .label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.current-weight .value, .target-weight .value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.arrow {
+  font-size: 24px;
+  color: #9ca3af;
+}
+
+.progress-bar-container {
+  margin-top: 16px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.progress-percent {
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+/* Chart Section */
+.chart-section {
+  margin: 24px 0;
+}
+
+.chart-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .fastnow-widget {
+    padding: 16px;
+  }
+
+  .widget-header h2 {
+    font-size: 20px;
+  }
+
+  .time-display {
+    font-size: 28px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .macros-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
